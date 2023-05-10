@@ -1,0 +1,9 @@
+services:
+  login-ms:
+    build:
+      context: ./login-ms
+      dockerfile: Dockerfile
+  register-ms:
+    build:
+      context: ./register-ms
+      dockerfile: Dockerfile
