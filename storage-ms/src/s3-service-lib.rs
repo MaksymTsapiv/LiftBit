@@ -10,7 +10,7 @@ use aws_sdk_s3::types::{
 };
 use aws_sdk_s3::{error::SdkError, primitives::ByteStream, Client};
 use error::Error;
-use std::path::Path;
+// use std::path::Path;
 use std::str;
 
 pub mod error;
@@ -69,14 +69,19 @@ pub async fn remove_object(client: &Client, bucket: &str, key: &str) -> Result<(
     Ok(())
 }
 
-pub async fn list_objects(client: &Client, bucket_name: &str) -> Result<(), Error> {
+pub async fn list_objects(client: &Client, bucket_name: &str) -> Result<String, Error> {
     let objects = client.list_objects_v2().bucket(bucket_name).send().await?;
+    let mut list: String = "".to_owned();
+
     println!("Objects in bucket:");
     for obj in objects.contents().unwrap_or_default() {
-        println!("{:?}", obj.key().unwrap());
+        let key = obj.key().unwrap();
+        list.push_str(key);
+        list.push_str("\n");
+        println!("{:?}", key);
     }
 
-    Ok(())
+    Ok(list)
 }
 
 pub async fn copy_object(
@@ -112,18 +117,33 @@ pub async fn download_object(
         .await
 }
 
+// pub async fn upload_object(
+//     client: &Client,
+//     bucket_name: &str,
+//     file_name: &str,
+//     key: &str,
+// ) -> Result<PutObjectOutput, SdkError<PutObjectError>> {
+//     let body = ByteStream::from_path(Path::new(file_name)).await;
+//     client
+//         .put_object()
+//         .bucket(bucket_name)
+//         .key(key)
+//         .body(body.unwrap())
+//         .send()
+//         .await
+// }
+
 pub async fn upload_object(
     client: &Client,
     bucket_name: &str,
-    file_name: &str,
+    file: ByteStream,
     key: &str,
 ) -> Result<PutObjectOutput, SdkError<PutObjectError>> {
-    let body = ByteStream::from_path(Path::new(file_name)).await;
     client
         .put_object()
         .bucket(bucket_name)
         .key(key)
-        .body(body.unwrap())
+        .body(file)
         .send()
         .await
 }
