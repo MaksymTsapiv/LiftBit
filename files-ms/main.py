@@ -1,12 +1,12 @@
 from typing import Annotated
 
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, Response, UploadFile, Form
 import httpx
 import uvicorn
 
 app = FastAPI()
 
-s3_url = "http://localhost:8080/storage"
+s3_url = "http://storage-ms:8080/storage"
 
 
 @app.post("/upload_file")
@@ -30,13 +30,22 @@ async def create_upload_file(file: UploadFile, username: str, path: str):
 async def add_permission(username: str, file: str, path: str):
     pass
 
-@app.post("/download_file")
-async def create_user(username: str, filename: str, path: str):
+@app.post("/download_file", responses={
+    200: {
+        "content": {"application/octet-stream": {}}
+    }
+})
+async def create_user(username: str, filename: str, path: str) -> Response:
 
 
     response = httpx.post(s3_url + "/download",
                            json={"username": username, "filename": filename,
                                  "path": path})
+
+    content_bytes = response.content
+
+    return Response(content=content_bytes)
+
 
 
 @app.post("/create_user")

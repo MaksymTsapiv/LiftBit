@@ -1,11 +1,8 @@
 services:
   # <<-- NGINX -->>
   nginx:
-    depends_on:
-      - login-ms
-      - register-ms
-      - metadata-ms
-      - metadata-db
+    # depends_on:
+    #   - files-ms
     restart: always
     build:
       context: ./nginx
@@ -13,23 +10,30 @@ services:
       - ${PORT}:3000
 
   # <<-- MICROSERVICES -->>
-  login-ms:
+  files-ms:
     build:
-      context: ./login-ms
-      dockerfile: Dockerfile
-  register-ms:
+      context: ./files-ms
+  storage-ms:
     build:
-      context: ./register-ms
-      dockerfile: Dockerfile
-  metadata-ms:
-    build:
-      context: ./metadata-ms
-      dockerfile: Dockerfile
+      context: ./storage-ms
 
-  metadata-db:
-    image: cassandra:latest
-    healthcheck:
-      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+  # login-ms:
+  #   build:
+  #     context: ./login-ms
+  #     dockerfile: Dockerfile
+  # register-ms:
+  #   build:
+  #     context: ./register-ms
+  #     dockerfile: Dockerfile
+  # metadata-ms:
+  #   build:
+  #     context: ./metadata-ms
+  #     dockerfile: Dockerfile
+
+  # metadata-db:
+  #   image: cassandra:latest
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5

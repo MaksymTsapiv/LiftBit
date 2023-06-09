@@ -126,7 +126,7 @@ async fn main() -> Result<(), anyhow::Error> {
     app.at("/storage/create_user").post(create_user);
     app.at("/storage/delete_user").post(delete_user);
 
-    app.listen("127.0.0.1:8080").await?;
+    app.listen("0.0.0.0:8080").await?;
 
     Ok(())
 }
