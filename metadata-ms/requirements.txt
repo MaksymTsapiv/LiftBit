@@ -1,3 +1,5 @@
 fastapi
 uvicorn[standard]
 pydantic
+cassandra-driver
+httpx
