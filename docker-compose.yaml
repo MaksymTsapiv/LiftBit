@@ -17,6 +17,9 @@ services:
   storage-ms:
     build:
       context: ./storage-ms
+  env_file:
+      - ./storage-ms/.env
+
 
   metadata-ms:
     build:
