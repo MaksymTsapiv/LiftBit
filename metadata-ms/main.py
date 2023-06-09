@@ -4,7 +4,7 @@ import uvicorn
 
 from typing import List
 
-from cassandra_client import CassandraClient
+from .cassandra_client import CassandraClient
 
 app = FastAPI()
 

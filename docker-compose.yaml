@@ -17,14 +17,16 @@ services:
   storage-ms:
     build:
       context: ./storage-ms
-  env_file:
-      - ./storage-ms/.env
+    env_file:
+        - ./storage-ms/.env
 
 
   metadata-ms:
     build:
       context: ./metadata-ms
       dockerfile: Dockerfile
+    depends_on:
+      - metadata-db
 
   metadata-db:
     image: cassandra:latest
