@@ -1,4 +1,18 @@
 services:
+  # <<-- NGINX -->>
+  nginx:
+    depends_on:
+      - login-ms
+      - register-ms
+      - metadata-ms
+      - metadata-db
+    restart: always
+    build:
+      context: ./nginx
+    ports:
+      - ${PORT}:3000
+
+  # <<-- MICROSERVICES -->>
   login-ms:
     build:
       context: ./login-ms
