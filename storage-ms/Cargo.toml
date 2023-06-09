@@ -22,3 +22,5 @@ tide = "0.16.0"
 serde = { version = "1.0.163", features = ["derive"] }
 # async-std = { version = "1.12.0", features = ["attributes"] }
 async-std = { version = "1.12.0", features = ["attributes", "tokio1"] }
+femme = "2.2.1"
+mime = "0.3.17"
