@@ -4,13 +4,12 @@ from fastapi import FastAPI, File, UploadFile, Form
 import httpx
 import uvicorn
 
-
 app = FastAPI()
 
 s3_url = "http://localhost:8080/storage"
 
 
-@app.post("/upload_file/")
+@app.post("/upload_file")
 async def create_upload_file(file: UploadFile, username: str, path: str):
 
     contents = await file.read()
@@ -26,14 +25,12 @@ async def create_upload_file(file: UploadFile, username: str, path: str):
     response = httpx.post(s3_url + "/upload",
                 content=content)
 
-    print(response)
-    return response
 
 @app.post("/add_permission")
 async def add_permission(username: str, file: str, path: str):
     pass
 
-@app.post("/download_file/")
+@app.post("/download_file")
 async def create_user(username: str, filename: str, path: str):
 
 
@@ -41,21 +38,24 @@ async def create_user(username: str, filename: str, path: str):
                            json={"username": username, "filename": filename,
                                  "path": path})
 
-    return response
 
-@app.post("/create_user/")
+@app.post("/create_user")
 async def create_user(username: str):
     response = httpx.post(s3_url + "/create_user",
-                           json={"name": username})
+                           json={"username": username})
 
-    return response
 
-@app.post("/delete_user/")
+@app.post("/delete_user")
 async def create_user(username: str):
     response = httpx.post(s3_url + "/delete_user",
-                           json={"name": username})
+                           json={"username": username})
 
-    return response
+
+@app.post("/list_files")
+async def list_files(username: str):
+    response = httpx.post(s3_url + "/list",
+                           json={"username": username})
+
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ const REGION: &str = "eu-north-1";
 
 #[derive(Deserialize)]
 struct Bucket {
-    name: String,
+    username: String,
 }
 
 #[derive(Deserialize)]
@@ -21,7 +21,7 @@ struct File {
     path: String
 }
 
-async fn upload_file(mut req: Request<()>) -> tide::Result<String> {
+async fn upload_file(mut req: Request<()>) -> Result<tide::Response, tide::Error> {
     let client = get_aws_client(REGION)?;
 
     let bytes: Vec<u8> = req.body_bytes().await.unwrap();
@@ -50,7 +50,7 @@ async fn upload_file(mut req: Request<()>) -> tide::Result<String> {
     let stream: ByteStream = ByteStream::from(content.to_vec());
 
     s3_service::upload_object(&client, &username, stream, &path).await?;
-    Ok(format!("Uploaded file: {}", path))
+    Ok(tide::Response::new(200))
 }
 
 async fn delete_file(mut req: Request<()>) -> tide::Result<String> {
@@ -65,8 +65,8 @@ async fn delete_file(mut req: Request<()>) -> tide::Result<String> {
 async fn list_files(mut req: Request<()>) -> tide::Result<String> {
     let client = get_aws_client(REGION)?;
 
-    let Bucket { name } = req.body_json().await?;
-    let list = s3_service::list_objects(&client, &name).await?;
+    let Bucket { username } = req.body_json().await?;
+    let list = s3_service::list_objects(&client, &username).await?;
 
     Ok(list)
 }
@@ -74,19 +74,19 @@ async fn list_files(mut req: Request<()>) -> tide::Result<String> {
 async fn create_user(mut req: Request<()>) -> tide::Result<String> {
     let client = get_aws_client(REGION)?;
 
-    let Bucket { name, .. } = req.body_json().await?;
-    s3_service::create_bucket(&client, &name, REGION).await?;
+    let Bucket { username, .. } = req.body_json().await?;
+    s3_service::create_bucket(&client, &username, REGION).await?;
 
-	Ok(format!("Created bucket: {}", name))
+	Ok(format!("Created bucket: {}", username))
 }
 
 async fn delete_user(mut req: Request<()>) -> tide::Result<String> {
     let client = get_aws_client(REGION)?;
 
-    let Bucket { name, .. } = req.body_json().await?;
-    s3_service::delete_bucket(&client, &name).await?;
+    let Bucket { username, .. } = req.body_json().await?;
+    s3_service::delete_bucket(&client, &username).await?;
 
-	Ok(format!("Deleted bucket: {}", name))
+	Ok(format!("Deleted bucket: {}", username))
 }
 
 async fn download_files(mut req: Request<()>) -> Result<tide::Response, tide::Error> {
