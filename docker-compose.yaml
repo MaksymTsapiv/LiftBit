@@ -13,9 +13,35 @@ services:
   files-ms:
     build:
       context: ./files-ms
+
   storage-ms:
     build:
       context: ./storage-ms
+
+  metadata-ms:
+    build:
+      context: ./metadata-ms
+      dockerfile: Dockerfile
+
+  metadata-db:
+    image: cassandra:latest
+    healthcheck:
+      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  metadata-db-setuper:
+    image: cassandra:latest
+    depends_on:
+      metadata-db:
+        condition:
+          service_healthy
+    restart: "no"
+    entrypoint: ["/setup_metadata_db.sh"]
+    volumes:
+      - ./metadata-db-setuper/cql/create_schema.cql:/create_schema.cql
+      - ./metadata-db-setuper/setup_metadata_db.sh:/setup_metadata_db.sh
 
   # login-ms:
   #   build:
@@ -25,15 +51,3 @@ services:
   #   build:
   #     context: ./register-ms
   #     dockerfile: Dockerfile
-  # metadata-ms:
-  #   build:
-  #     context: ./metadata-ms
-  #     dockerfile: Dockerfile
-
-  # metadata-db:
-  #   image: cassandra:latest
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 5

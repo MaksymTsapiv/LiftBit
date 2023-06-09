@@ -8,7 +8,7 @@ from cassandra_client import CassandraClient
 
 app = FastAPI()
 
-host = 'cassandra-node'
+host = 'metadata-db'
 port = 9042
 keyspace = "metadata"
 tables = ["files"]
