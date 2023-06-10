@@ -9,6 +9,11 @@ app = FastAPI()
 s3_url =    "http://storage-ms:8080/storage"
 meta_url =  "http://metadata-ms:80"
 
+types = {"png":     "image/png",
+         "jpg":     "image/jpg",
+         "txt":     "text/plain",
+         "html":    "text/html"
+}
 
 @app.post("/upload_file")
 async def create_upload_file(file: UploadFile, username: str, path: str):
@@ -32,14 +37,16 @@ async def create_upload_file(file: UploadFile, username: str, path: str):
 
 @app.post("/change_permissions")
 async def add_permission(username: str, filename: str,
-                          give: List[str], remove: List[str]):
+                          give: List[str]=[], remove: List[str]=[]):
+    if give:
+        httpx.post(meta_url + "/give_permissions",
+                            params={"username": username, "filename": filename},
+                            json=give)
 
-    httpx.post(meta_url + "/give_permissions",
-                         params={"username": username, "filename": filename, "users": give})    
-    
-    httpx.post(meta_url + "/remove_permissions",
-                         params={"username": username, "filename": filename, "users": remove})    
-    
+    if remove:
+        httpx.post(meta_url + "/remove_permissions",
+                            params={"username": username, "filename": filename},
+                            json=remove)
 
 @app.post("/download_file", responses={
     200: {
@@ -48,6 +55,9 @@ async def add_permission(username: str, filename: str,
 })
 async def download_file(username: str, filename: str, path: str,
                          owner: str) -> Response:
+    
+    end = filename.split('.')[-1]
+    media_type = types[end] if filename != end else types["txt"]
 
     access = httpx.get(meta_url + "/get_permission_status",
                          params={"username": owner, "filename": filename,
@@ -60,7 +70,7 @@ async def download_file(username: str, filename: str, path: str,
 
         content_bytes = response.content
 
-        return Response(content=content_bytes, media_type="image/png")
+        return Response(content=content_bytes, media_type=media_type)
     return Response(status_code=403)
 
 
