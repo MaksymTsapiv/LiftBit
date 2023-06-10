@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import FastAPI, File, Response, UploadFile, Form
 import httpx
@@ -6,7 +6,8 @@ import uvicorn
 
 app = FastAPI()
 
-s3_url = "http://storage-ms:8080/storage"
+s3_url =    "http://storage-ms:8080/storage"
+meta_url =  "http://metadata-ms:80"
 
 
 @app.post("/upload_file")
@@ -24,27 +25,43 @@ async def create_upload_file(file: UploadFile, username: str, path: str):
 
     response = httpx.post(s3_url + "/upload",
                 content=content)
+    
+    httpx.post(meta_url + "/insert_file",
+                         params={"username": username, "filename": file.filename})    
 
 
-@app.post("/add_permission")
-async def add_permission(username: str, file: str, path: str):
-    pass
+@app.post("/change_permissions")
+async def add_permission(username: str, filename: str,
+                          give: List[str], remove: List[str]):
+
+    httpx.post(meta_url + "/give_permissions",
+                         params={"username": username, "filename": filename, "users": give})    
+    
+    httpx.post(meta_url + "/remove_permissions",
+                         params={"username": username, "filename": filename, "users": remove})    
+    
 
 @app.post("/download_file", responses={
     200: {
         "content": {"application/octet-stream": {}}
     }
 })
-async def create_user(username: str, filename: str, path: str) -> Response:
+async def download_file(username: str, filename: str, path: str,
+                         owner: str) -> Response:
 
+    access = httpx.get(meta_url + "/get_permission_status",
+                         params={"username": owner, "filename": filename,
+                               "user": username})
 
-    response = httpx.post(s3_url + "/download",
-                           json={"username": username, "filename": filename,
-                                 "path": path})
+    if (access.json()):
+        response = httpx.post(s3_url + "/download",
+                            json={"username": username, "filename": filename,
+                                    "path": path})
 
-    content_bytes = response.content
+        content_bytes = response.content
 
-    return Response(content=content_bytes)
+        return Response(content=content_bytes, media_type="image/png")
+    return Response(status_code=403)
 
 
 
@@ -55,7 +72,7 @@ async def create_user(username: str):
 
 
 @app.post("/delete_user")
-async def create_user(username: str):
+async def delete_user(username: str):
     response = httpx.post(s3_url + "/delete_user",
                            json={"username": username})
 
