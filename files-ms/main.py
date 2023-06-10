@@ -35,7 +35,7 @@ async def add_permission(username: str, file: str, path: str):
         "content": {"application/octet-stream": {}}
     }
 })
-async def create_user(username: str, filename: str, path: str) -> Response:
+async def download_file(username: str, filename: str, path: str) -> Response:
 
 
     response = httpx.post(s3_url + "/download",
@@ -55,7 +55,7 @@ async def create_user(username: str):
 
 
 @app.post("/delete_user")
-async def create_user(username: str):
+async def delete_user(username: str):
     response = httpx.post(s3_url + "/delete_user",
                            json={"username": username})
 
