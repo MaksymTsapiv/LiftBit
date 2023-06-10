@@ -17,6 +17,12 @@ RUN cargo build --release --bin storage-ms
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bullseye-slim AS runtime
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends ca-certificates
+RUN update-ca-certificates
+
+
 WORKDIR /storage-ms
 COPY --from=builder /storage-ms/target/release/storage-ms /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/storage-ms"]

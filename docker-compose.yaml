@@ -13,6 +13,9 @@ services:
   files-ms:
     build:
       context: ./files-ms
+    restart: unless-stopped
+    depends_on:
+      - kafka-broker
 
   storage-ms:
     build:
@@ -61,6 +64,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
   kafka-broker:
     image: "bitnami/kafka:latest"
     environment:
@@ -69,6 +73,7 @@ services:
     depends_on:
       zookeeper-server:
         condition: service_healthy
+
   kafka-setuper:
     image: "bitnami/kafka:latest"
     depends_on:
@@ -78,6 +83,40 @@ services:
     volumes:
       - ./kafka-setuper/init.sh:/init.sh
 
+  # <<-- SPARK stuff -->>
+  spark-master:
+    image: docker.io/bitnami/spark:3
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    volumes:
+      - ./analytics:/opt/app:rw
+  spark-worker:
+    image: docker.io/bitnami/spark:3
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    volumes:
+      - ./analytics:/opt/app:rw
+  job-submitter:
+    image: docker.io/bitnami/spark:3
+    user: root
+    depends_on:
+      - spark-master
+      - spark-worker
+      - kafka-broker
+    volumes:
+      - ./analytics:/opt/app:rw
+    entrypoint: ["/opt/app/submit-job.sh"]
 
   # login-ms:
   #   build:

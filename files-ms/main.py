@@ -4,16 +4,21 @@ from fastapi import FastAPI, File, Response, UploadFile, Form
 import httpx
 import uvicorn
 
-app = FastAPI()
+from .analytics import KafkaClient
 
 s3_url =    "http://storage-ms:8080/storage"
 meta_url =  "http://metadata-ms:80"
+KAFKA_HOST = "kafka-broker"
 
-types = {"png":     "image/png",
-         "jpg":     "image/jpg",
-         "txt":     "text/plain",
-         "html":    "text/html"
+types = {
+    "png":     "image/png",
+    "jpg":     "image/jpg",
+    "txt":     "text/plain",
+    "html":    "text/html"
 }
+
+app = FastAPI()
+analytics_client = KafkaClient(KAFKA_HOST)
 
 @app.post("/upload_file")
 async def create_upload_file(file: UploadFile, username: str, path: str):
@@ -33,6 +38,8 @@ async def create_upload_file(file: UploadFile, username: str, path: str):
     
     httpx.post(meta_url + "/insert_file",
                          params={"username": username, "filename": file.filename})    
+
+    analytics_client.log_upload(username, path, file.size)
 
 
 @app.post("/change_permissions")
@@ -69,6 +76,8 @@ async def download_file(username: str, filename: str, path: str,
                                     "path": path})
 
         content_bytes = response.content
+
+        analytics_client.log_download(owner, path, len(content_bytes), username)
 
         return Response(content=content_bytes, media_type=media_type)
     return Response(status_code=403)
