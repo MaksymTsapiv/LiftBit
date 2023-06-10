@@ -91,6 +91,7 @@ async def delete_user(username: str):
 async def list_files(username: str):
     response = httpx.post(s3_url + "/list",
                            json={"username": username})
+    return Response(content=response.content, media_type="text/plain")
 
 
 
