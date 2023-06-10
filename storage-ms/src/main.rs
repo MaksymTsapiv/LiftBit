@@ -62,13 +62,17 @@ async fn delete_file(mut req: Request<()>) -> tide::Result<String> {
     Ok(format!("Deleted file: {}", filename))
 }
 
-async fn list_files(mut req: Request<()>) -> tide::Result<String> {
+async fn list_files(mut req: Request<()>) -> Result<tide::Response, tide::Error> {
     let client = get_aws_client(REGION)?;
 
     let Bucket { username } = req.body_json().await?;
     let list = s3_service::list_objects(&client, &username).await?;
 
-    Ok(list)
+    let response = tide::Response::builder(200)
+        .body(list.as_bytes())
+        .build();
+
+	Ok(response)
 }
 
 async fn create_user(mut req: Request<()>) -> tide::Result<String> {

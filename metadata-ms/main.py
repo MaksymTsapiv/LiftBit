@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 import httpx
 import uvicorn
 
@@ -41,11 +41,12 @@ async def change_permissions(username: str, filename: str, users: List[str]):
     client.insert_data(tables[0], params, [filename, username, l])
 
 
-@app.post("/get_permission_status")
-async def get_permission_status(username: str, filename: str, user: str):
+@app.get("/get_permission_status")
+async def get_permission_status(username: str, filename: str, user: str) -> bool:
     users = client.read_from_table(tables[0], ['users'],
                             f"WHERE owner = '{username}' AND filename = '{filename}'")
-    return user in users.one()[0]
+    result = user in users.one()[0]
+    return result
 
 
 @app.post("/show_table")
