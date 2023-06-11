@@ -32,7 +32,7 @@ analytics_client = KafkaClient(KAFKA_HOST)
 ALLOWED_CHARS = string.ascii_lowercase \
                 + string.ascii_uppercase \
                 + string.digits \
-                + " ."
+                + " ._"
 
 def check_validity(path: str):
     """Raises 404 HTTPException if has invalid characters
