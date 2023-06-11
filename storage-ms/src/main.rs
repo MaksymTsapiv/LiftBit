@@ -17,7 +17,6 @@ struct Bucket {
 #[derive(Deserialize)]
 struct File {
     username: String,
-    filename: String,
     path: String
 }
 
@@ -29,23 +28,12 @@ async fn upload_file(mut req: Request<()>) -> Result<tide::Response, tide::Error
     let (buf, mix) = bytes.split_at(username_len + 1);
     let (_, username_b) = buf.split_at(1);
 
-    let filename_len = usize::from(mix[0]);
-    let (buf, mix) = mix.split_at(filename_len + 1);
-    let (_, filename_b) = buf.split_at(1);
-
     let path_len = usize::from(mix[0]);
     let (buf, content) = mix.split_at(path_len + 1);
     let (_, path_b) = buf.split_at(1);
 
     let username = std::str::from_utf8(username_b).unwrap();
-    let filename = String::from_utf8(filename_b.to_vec()).unwrap();
-    let mut path = String::from_utf8(path_b.to_vec()).unwrap();
-    
-    if path.is_empty() || path == "." {
-        path = filename;
-    } else {
-        path.push_str(format!("/{}", filename).as_str());        
-    }
+    let path: String = String::from_utf8(path_b.to_vec()).unwrap();
 
     let stream: ByteStream = ByteStream::from(content.to_vec());
 
@@ -56,10 +44,9 @@ async fn upload_file(mut req: Request<()>) -> Result<tide::Response, tide::Error
 async fn delete_file(mut req: Request<()>) -> tide::Result<String> {
     let client = get_aws_client(REGION)?;
 
-    let File {username, filename, mut path } = req.body_json().await?;
-    path.push_str(format!("/{}", filename).as_str());
+    let File {username, path } = req.body_json().await?;
     s3_service::remove_object(&client, &username, &path).await?;
-    Ok(format!("Deleted file: {}", filename))
+    Ok(format!("Deleted file: {}", path))
 }
 
 async fn list_files(mut req: Request<()>) -> Result<tide::Response, tide::Error> {
@@ -88,6 +75,15 @@ async fn delete_user(mut req: Request<()>) -> tide::Result<String> {
     let client = get_aws_client(REGION)?;
 
     let Bucket { username, .. } = req.body_json().await?;
+
+    let list = s3_service::list_objects(&client, &username).await?;
+
+    for obj in list.split('\n') {
+        if obj.len() < 3 {
+            continue;
+        }
+        s3_service::remove_object(&client, &username, &obj).await?;
+    }
     s3_service::delete_bucket(&client, &username).await?;
 
 	Ok(format!("Deleted bucket: {}", username))
@@ -95,13 +91,10 @@ async fn delete_user(mut req: Request<()>) -> tide::Result<String> {
 
 async fn download_files(mut req: Request<()>) -> Result<tide::Response, tide::Error> {
 	let client = get_aws_client(REGION)?;
-    let File { username, filename, mut path} = req.body_json().await?;
-    if path.is_empty() || path == "." {
-        path = filename;
-    } else {
-        path.push_str(format!("/{}", filename).as_str());        
-    }
+    let File { username, path } = req.body_json().await?;
 	
+    tide::log::info!("{}", path);
+    println!("{}", path.as_str());
     let object = s3_service::download_object(&client, &username, &path).await?;
 	let bytes = object.body.collect().await?.to_vec();
     

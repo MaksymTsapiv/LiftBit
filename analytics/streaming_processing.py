@@ -58,6 +58,7 @@ def streaming_processing(spark: SparkSession):
         )
     ).select("timestamp", "info.*")
 
+
     download_statistics = download_info.groupBy(F.window("timestamp", "5 minutes"))\
         .agg(
             F.count(F.col("path")).alias("Number of downloads"),
@@ -70,6 +71,8 @@ def streaming_processing(spark: SparkSession):
         .format("console")\
         .start()\
         .awaitTermination()
+
+
 
     # output_format = "csv"  # or "parquet", "json", etc.
 
