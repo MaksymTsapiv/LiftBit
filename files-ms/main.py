@@ -120,7 +120,7 @@ async def download_file(username: str, filename: str, owner: str) -> Response:
 
         return Response(content=content_bytes)
 
-    return Response(status_code=403)
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
 
 @app.post("/create_user")
