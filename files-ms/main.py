@@ -110,7 +110,7 @@ async def download_file(username: str, filename: str, owner: str) -> Response:
                                "user": username})
 
     if (access.json()):
-        username_for_storage = hash_username(username)
+        username_for_storage = hash_username(owner)
         response = httpx.post(s3_url + "/download",
                             json={"username": username_for_storage, "path": filename})
 
