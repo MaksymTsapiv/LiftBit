@@ -118,12 +118,12 @@ services:
       - ./analytics:/opt/app:rw
     entrypoint: ["/opt/app/submit-job.sh"]
 
-  sqlite3:
-    image: nouchka/sqlite3:latest
-    stdin_open: true
-    tty: true
+  # sqlite3:
+  #   image: nouchka/sqlite3:latest
+  #   stdin_open: true
+  #   tty: true
 
-  login-ms:
-    build:
-      context: ./login-ms
-      dockerfile: Dockerfile
+  # login-ms:
+  #   build:
+  #     context: ./login-ms
+  #     dockerfile: Dockerfile
