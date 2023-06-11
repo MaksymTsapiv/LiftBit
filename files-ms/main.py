@@ -108,6 +108,8 @@ async def download_file(username: str, filename: str, owner: str) -> Response:
     access = httpx.get(meta_url + "/get_permission_status",
                          params={"username": owner, "filename": filename,
                                "user": username})
+    end = filename.split('.')[-1]
+    media_type = types[end] if ((filename != end) and (end in types)) else types["txt"]
 
     if (access.json()):
         username_for_storage = hash_username(owner)
@@ -118,7 +120,7 @@ async def download_file(username: str, filename: str, owner: str) -> Response:
 
         analytics_client.log_download(owner, filename, len(content_bytes), username)
 
-        return Response(content=content_bytes)
+        return Response(content=content_bytes, media_type=media_type)
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
