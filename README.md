@@ -6,6 +6,13 @@
 
 ## Usage
 
+Create `./storage_ms/.env`, put there your Amazon AWS credentials:
+```
+S3_KEY_ID=...
+S3_KEY_SECRET=...
+```
+
+
 ### Starting the containers
 To (re)build images and start the containers, run the following in the project root directory:
 ```bash
