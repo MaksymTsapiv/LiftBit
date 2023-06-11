@@ -45,8 +45,11 @@ async def change_permissions(username: str, filename: str, users: List[str]):
 async def get_permission_status(username: str, filename: str, user: str) -> bool:
     users = client.read_from_table(tables[0], ['users'],
                             f"WHERE owner = '{username}' AND filename = '{filename}'")
-    result = user in users.one()[0]
-    return result
+    row = users.one()
+    if row:
+        result = user in row[0]
+        return result
+    return False
 
 
 @app.post("/show_table")

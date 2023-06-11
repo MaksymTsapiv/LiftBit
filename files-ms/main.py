@@ -81,7 +81,7 @@ async def upload_file(file: UploadFile, username: str, filename: str):
                 content=content)
     
     httpx.post(meta_url + "/insert_file",
-                         params={"username": username, "filename": file.filename})    
+                         params={"username": username, "filename": filename})    
 
     analytics_client.log_upload(username, filename, file.size)
 
