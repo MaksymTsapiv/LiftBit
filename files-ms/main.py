@@ -104,23 +104,23 @@ async def remove_permission(username: str, filename: str, other_username: str):
         "content": {"application/octet-stream": {}}
     }
 })
-async def download_file(username: str, path: str, owner: str) -> Response:
-    # access = httpx.get(meta_url + "/get_permission_status",
-    #                      params={"username": owner, "filename": filename,
-    #                            "user": username})
+async def download_file(username: str, filename: str, owner: str) -> Response:
+    access = httpx.get(meta_url + "/get_permission_status",
+                         params={"username": owner, "filename": filename,
+                               "user": username})
 
-    # if (access.json()):
-    username_for_storage = hash_username(username)
-    response = httpx.post(s3_url + "/download",
-                        json={"username": username_for_storage, "path": path})
+    if (access.json()):
+        username_for_storage = hash_username(username)
+        response = httpx.post(s3_url + "/download",
+                            json={"username": username_for_storage, "path": filename})
 
-    content_bytes = response.content
+        content_bytes = response.content
 
-    analytics_client.log_download(owner, path, len(content_bytes), username)
+        analytics_client.log_download(owner, filename, len(content_bytes), username)
 
-    return Response(content=content_bytes)
-    # return Response(status_code=403)
+        return Response(content=content_bytes)
 
+    return Response(status_code=403)
 
 
 @app.post("/create_user")
